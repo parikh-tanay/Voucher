@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IEEE Nirma — Reimbursement Voucher Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#12203a;
+    --ink-soft:#4a5a76;
+    --paper:#f6f4ee;
+    --card:#ffffff;
+    --line:#d8dce4;
+    --ieee-blue:#00629b;
+    --ieee-blue-dark:#004a76;
+    --stamp:#b2472a;
+    --good:#1e7a4c;
+    --bad:#c23b3b;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(18,32,58,0.06) 1px, transparent 0);
+    background-size: 22px 22px;
+    color:var(--ink);
+    font-family: "Iowan Old Style","Palatino Linotype", Georgia, serif;
+    padding: 32px 16px 80px;
+  }
+  .wrap{max-width: 900px; margin: 0 auto;}
+
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 26px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand-mark{
+    display:flex; align-items:center; gap:12px;
+  }
+  .seal{
+    width:44px;height:44px;border-radius:50%;
+    background: conic-gradient(from 220deg, var(--ieee-blue), var(--ieee-blue-dark));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff; font-family: "Georgia", serif; font-weight:700; font-size:15px;
+    letter-spacing:0.5px;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--ink);
+    flex-shrink:0;
+  }
+  h1{
+    font-size: 1.5rem;
+    margin:0;
+    letter-spacing:0.2px;
+    font-weight:700;
+  }
+  .subtitle{
+    font-family: "Courier New", monospace;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    margin-top:2px;
+  }
+  .stamp-tag{
+    font-family:"Courier New", monospace;
+    font-size:0.68rem;
+    color:var(--stamp);
+    border:1.5px solid var(--stamp);
+    border-radius:3px;
+    padding:5px 9px;
+    transform: rotate(-2deg);
+    letter-spacing:1px;
+    white-space:nowrap;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:22px;
+    box-shadow: 0 1px 2px rgba(18,32,58,0.04);
+  }
+  .card h2{
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:1.6px;
+    color:var(--ieee-blue-dark);
+    margin:0 0 16px;
+    font-family:"Courier New", monospace;
+    display:flex; align-items:center; gap:10px;
+  }
+  .card h2::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media (max-width:640px){ .grid2, .grid3{grid-template-columns:1fr;} }
+
+  label{
+    display:block;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    margin-bottom:5px;
+    font-family: Arial, sans-serif;
+  }
+  input[type=text], input[type=date], input[type=number], input[type=email], textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-family: Arial, sans-serif;
+    font-size:0.92rem;
+    background:#fcfcfa;
+    color:var(--ink);
+  }
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--ieee-blue);
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(0,98,155,0.12);
+  }
+  .field{margin-bottom:14px;}
+
+  table.particulars{
+    width:100%;
+    border-collapse:collapse;
+    font-family:Arial, sans-serif;
+    font-size:0.85rem;
+  }
+  table.particulars th{
+    background:#eef3f7;
+    color:var(--ieee-blue-dark);
+    text-align:left;
+    padding:8px 6px;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    border-bottom:2px solid var(--ieee-blue);
+  }
+  table.particulars td{
+    padding:6px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  table.particulars input{padding:6px 7px; font-size:0.85rem;}
+  table.particulars td.srno{
+    width:28px; text-align:center; color:var(--ink-soft); font-family:"Courier New",monospace;
+  }
+  .col-amount input{text-align:right;}
+  .col-del{width:34px; text-align:center;}
+  .del-row-btn{
+    border:none; background:none; color:var(--bad); cursor:pointer;
+    font-size:1.05rem; line-height:1; padding:4px;
+  }
+  .del-row-btn:hover{ transform:scale(1.15); }
+
+  .table-actions{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:12px;
+  }
+  .add-row-btn{
+    border:1.5px dashed var(--ieee-blue);
+    background:#fff;
+    color:var(--ieee-blue-dark);
+    padding:7px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-family:Arial, sans-serif;
+    font-size:0.8rem;
+    font-weight:600;
+  }
+  .add-row-btn:hover{ background:#eef3f7; }
+  .total-box{
+    font-family:"Courier New", monospace;
+    font-size:0.95rem;
+    text-align:right;
+  }
+  .total-box .amt{
+    font-weight:700;
+    font-size:1.25rem;
+    color:var(--ieee-blue-dark);
+  }
+
+  .upload-zone{
+    border:1.5px dashed var(--line);
+    border-radius:8px;
+    padding:16px;
+    text-align:center;
+    cursor:pointer;
+    background:#fcfcfa;
+    transition: border-color .15s, background .15s;
+    font-family:Arial, sans-serif;
+  }
+  .upload-zone:hover, .upload-zone.drag{
+    border-color:var(--ieee-blue);
+    background:#eef3f7;
+  }
+  .upload-zone input{display:none;}
+  .upload-zone .hint{
+    font-size:0.7rem; color:var(--ink-soft); margin-top:4px;
+  }
+  .upload-title{font-size:0.85rem; font-weight:600; color:var(--ink);}
+
+  .file-list{
+    display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;
+  }
+  .file-chip{
+    display:flex; align-items:center; gap:8px;
+    background:#eef3f7;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 6px 6px 8px;
+    font-family:Arial, sans-serif;
+    font-size:0.76rem;
+    max-width:220px;
+  }
+  .file-chip img{
+    width:32px;height:32px;object-fit:cover;border-radius:4px;flex-shrink:0;
+  }
+  .file-chip .name{
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .file-chip button{
+    border:none; background:none; color:var(--bad); cursor:pointer; font-size:0.95rem;
+    padding:2px 4px; flex-shrink:0;
+  }
+
+  .attach-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+  @media (max-width:800px){ .attach-grid{grid-template-columns:1fr;} }
+
+  .generate-bar{
+    position:sticky; bottom:16px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--ink);
+    color:#fff;
+    padding:14px 20px;
+    border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(18,32,58,0.25);
+    font-family:Arial, sans-serif;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .generate-bar .msg{font-size:0.8rem; color:#c9d3e4;}
+  .generate-bar .buttons{display:flex; gap:10px;}
+  button.primary{
+    background: var(--ieee-blue);
+    color:#fff;
+    border:none;
+    padding:11px 22px;
+    border-radius:7px;
+    font-family:Arial, sans-serif;
+    font-weight:700;
+    font-size:0.88rem;
+    cursor:pointer;
+    letter-spacing:0.3px;
+  }
+  button.primary:hover{background:var(--ieee-blue-dark);}
+  button.ghost{
+    background:transparent;
+    border:1.5px solid #56617a;
+    color:#dfe4ee;
+    padding:11px 18px;
+    border-radius:7px;
+    font-family:Arial, sans-serif;
+    font-size:0.85rem;
+    cursor:pointer;
+  }
+  button.ghost:hover{border-color:#fff; color:#fff;}
+
+  .footnote{
+    text-align:center;
+    color:var(--ink-soft);
+    font-family:"Courier New", monospace;
+    font-size:0.68rem;
+    letter-spacing:0.5px;
+    margin-top:30px;
+  }
+  .required::after{content:" *"; color:var(--bad);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-mark">
+      <div class="seal">IEEE</div>
+      <div>
+        <h1>Expense Reimbursement Voucher</h1>
+        <div class="subtitle">IEEE Student Branch · Nirma University</div>
+      </div>
+    </div>
+    <div class="stamp-tag">GENERATOR&nbsp;v1</div>
+  </header>
+
+  <!-- EVENT DETAILS -->
+  <section class="card">
+    <h2>Event Details</h2>
+    <div class="grid3">
+      <div class="field">
+        <label class="required">Event Name</label>
+        <input type="text" id="eventName" placeholder="e.g. TechXplore 2026">
+      </div>
+      <div class="field">
+        <label class="required">Purpose</label>
+        <input type="text" id="purpose" placeholder="e.g. Printing & Refreshments">
+      </div>
+      <div class="field">
+        <label class="required">Date</label>
+        <input type="date" id="eventDate">
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTICULARS -->
+  <section class="card">
+    <h2>Particulars</h2>
+    <div style="overflow-x:auto;">
+    <table class="particulars" id="particularsTable" style="min-width:640px;">
+      <thead>
+        <tr>
+          <th>Sr.</th>
+          <th>Biller's Name</th>
+          <th>Bill Date</th>
+          <th>GST No. (if any)</th>
+          <th>Items / Services</th>
+          <th>Amount (Rs.)</th>
+          <th>Paid Via</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="particularsBody"></tbody>
+    </table>
+    </div>
+    <div class="table-actions">
+      <button class="add-row-btn" id="addRowBtn" type="button">+ Add line item</button>
+      <div class="total-box">Total Amount &nbsp;<span class="amt" id="totalAmount">₹ 0</span></div>
+    </div>
+  </section>
+
+  <!-- STUDENT DETAILS -->
+  <section class="card">
+    <h2>Student Details</h2>
+    <div class="grid2">
+      <div class="field">
+        <label class="required">Name of Student</label>
+        <input type="text" id="studentName" placeholder="Full name">
+      </div>
+      <div class="field">
+        <label class="required">Roll No.</label>
+        <input type="text" id="rollNo" placeholder="e.g. 22BCE001">
+      </div>
+      <div class="field">
+        <label class="required">Nirma Email</label>
+        <input type="email" id="nirmaEmail" placeholder="name@nirmauni.ac.in">
+      </div>
+      <div class="field">
+        <label class="required">Phone Number</label>
+        <input type="text" id="phone" placeholder="10-digit mobile number">
+      </div>
+      <div class="field">
+        <label class="required">UPI ID / Account No.</label>
+        <input type="text" id="upi" placeholder="e.g. name@okhdfcbank">
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:6px; max-width:360px;">
+      <label>Student Signature <span style="text-transform:none; letter-spacing:0; color:var(--ink-soft);">(optional)</span></label>
+      <label class="upload-zone" data-target="signature" style="padding:12px;">
+        <input type="file" id="signatureInput" accept="image/*">
+        <span id="signatureZoneText">Drop or click to upload a signature image</span>
+        <div class="hint">A photo/scan of your signature, or a signature drawn on a plain background</div>
+      </label>
+      <div class="file-list" id="signatureList"></div>
+    </div>
+  </section>
+
+  <!-- ATTACHMENTS -->
+  <section class="card">
+    <h2>Attachments</h2>
+    <div class="attach-grid">
+      <div>
+        <div class="upload-title">Bill(s) of Purchase</div>
+        <label class="upload-zone" data-target="bills">
+          <input type="file" id="billsInput" accept="image/*,.pdf" multiple>
+          Drop or click to upload
+          <div class="hint">Photos of receipts / bills</div>
+        </label>
+        <div class="file-list" id="billsList"></div>
+      </div>
+      <div>
+        <div class="upload-title">Payment Screenshot (Individual → Vendor)</div>
+        <label class="upload-zone" data-target="payment">
+          <input type="file" id="paymentInput" accept="image/*,.pdf" multiple>
+          Drop or click to upload
+          <div class="hint">UPI / bank transfer proof</div>
+        </label>
+        <div class="file-list" id="paymentList"></div>
+      </div>
+      <div>
+        <div class="upload-title">Reimbursement Screenshot (Branch → Individual)</div>
+        <label class="upload-zone" data-target="reimb">
+          <input type="file" id="reimbInput" accept="image/*,.pdf" multiple>
+          Drop or click to upload
+          <div class="hint">Once reimbursement is processed</div>
+        </label>
+        <div class="file-list" id="reimbList"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="generate-bar">
+    <div class="msg" id="statusMsg">Fill in the details above, then generate the voucher — everything happens in your browser.</div>
+    <div class="buttons">
+      <button class="ghost" id="resetBtn" type="button">Reset form</button>
+      <button class="primary" id="generateBtn" type="button">Generate .docx</button>
+    </div>
+  </div>
+
+  <div class="footnote">RUNS ENTIRELY CLIENT-SIDE · NO DATA LEAVES YOUR BROWSER</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- State ---------- */
+  let rowCounter = 0;
+  const attachments = { bills: [], payment: [], reimb: [], signature: [] };
+
+  /* ---------- Particulars table ---------- */
+  const tbody = document.getElementById('particularsBody');
+
+  function addRow(prefill){
+    rowCounter++; // unique id only, NOT the displayed Sr. No — renumberRows() owns that
+    const tr = document.createElement('tr');
+    tr.dataset.id = rowCounter;
+    tr.innerHTML = `
+      <td class="srno"></td>
+      <td><input type="text" class="f-biller" placeholder="Vendor name"></td>
+      <td><input type="date" class="f-billdate"></td>
+      <td><input type="text" class="f-gst" placeholder="—"></td>
+      <td><input type="text" class="f-items" placeholder="Items / services"></td>
+      <td class="col-amount"><input type="number" class="f-amount" placeholder="0" min="0" step="0.01"></td>
+      <td>
+        <select class="f-paidvia" style="width:100%;padding:6px 7px;font-family:Arial,sans-serif;font-size:0.85rem;border:1px solid var(--line);border-radius:6px;">
+          <option value="Online">Online</option>
+          <option value="Cash">Cash</option>
+        </select>
+      </td>
+      <td class="col-del"><button type="button" class="del-row-btn" title="Remove row">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector('.f-amount').addEventListener('input', updateTotal);
+    tr.querySelector('.del-row-btn').addEventListener('click', function(){
+      tr.remove();
+      renumberRows();
+      updateTotal();
+    });
+    renumberRows(); // keeps Sr. No. correct even after a delete-then-add sequence
+  }
+
+  function renumberRows(){
+    [...tbody.querySelectorAll('tr')].forEach((tr, i) => {
+      tr.querySelector('.srno').textContent = i + 1;
+    });
+  }
+
+  function updateTotal(){
+    const amounts = [...tbody.querySelectorAll('.f-amount')].map(i => parseFloat(i.value) || 0);
+    const total = amounts.reduce((a,b) => a+b, 0);
+    document.getElementById('totalAmount').textContent =
+      '₹ ' + total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  document.getElementById('addRowBtn').addEventListener('click', () => addRow());
+  addRow(); addRow(); addRow(); // start with 3 rows, matching the original voucher
+
+  /* ---------- Attachments ---------- */
+  function setupUpload(zoneSelector, inputId, listId, key, opts){
+    opts = opts || {};
+    const zone = document.querySelector(zoneSelector);
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+
+    input.addEventListener('change', () => handleFiles(input.files));
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(fileList){
+      let files = [...fileList];
+      if(opts.singleFile){
+        // Replace whatever was there before, and only ever keep the first file
+        // dropped/selected — a signature is one image, not a gallery.
+        files = files.slice(0, 1);
+        attachments[key] = [];
+        list.innerHTML = '';
+      }
+      files.forEach(file => {
+        const id = Date.now() + Math.random().toString(36).slice(2);
+        const entry = { id, file };
+        attachments[key].push(entry);
+        renderChip(entry);
+      });
+      input.value = '';
+    }
+
+    function renderChip(entry){
+      // Built with DOM methods (not innerHTML) so a filename containing HTML
+      // can't be interpreted as markup — .textContent always renders as plain text.
+      const chip = document.createElement('div');
+      chip.className = 'file-chip';
+      chip.dataset.id = entry.id;
+
+      if(entry.file.type.startsWith('image/')){
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(entry.file);
+        chip.appendChild(img);
+      } else {
+        const icon = document.createElement('span');
+        icon.style.fontSize = '1.2rem';
+        icon.textContent = '📄';
+        chip.appendChild(icon);
+      }
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'name';
+      nameSpan.title = entry.file.name;
+      nameSpan.textContent = entry.file.name;
+      chip.appendChild(nameSpan);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.title = 'Remove';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', () => {
+        attachments[key] = attachments[key].filter(e => e.id !== entry.id);
+        chip.remove();
+      });
+      chip.appendChild(removeBtn);
+
+      list.appendChild(chip);
+    }
+  }
+  setupUpload('[data-target="bills"]', 'billsInput', 'billsList', 'bills');
+  setupUpload('[data-target="payment"]', 'paymentInput', 'paymentList', 'payment');
+  setupUpload('[data-target="reimb"]', 'reimbInput', 'reimbList', 'reimb');
+  setupUpload('[data-target="signature"]', 'signatureInput', 'signatureList', 'signature', { singleFile: true });
+
+  /* ---------- Reset ---------- */
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(!confirm('Clear the whole form? This cannot be undone.')) return;
+    document.querySelectorAll('.card input[type=text], .card input[type=date], .card input[type=email]').forEach(i => {
+      if(!i.closest('#particularsTable')) i.value = '';
+    });
+    tbody.innerHTML = '';
+    rowCounter = 0;
+    addRow(); addRow(); addRow();
+    updateTotal();
+    ['bills','payment','reimb','signature'].forEach(k => { attachments[k] = []; document.getElementById(k+'List').innerHTML=''; });
+    document.getElementById('statusMsg').textContent = 'Form cleared. Fill in the details above, then generate the voucher.';
+  });
+
+  /* ---------- DOCX generation ----------
+     NOTE: `docx` (the library global) is only read inside generateDocx(),
+     not destructured at page-load time. Some campus/office networks block
+     CDN domains — if that happens here, `docx` never gets defined, and if
+     we destructured it up front the whole script would throw on load and
+     silently disable every button on the page (even "add row"). Reading it
+     lazily means only the "Generate" step is affected, and we can show the
+     person a clear message instead of a broken page. */
+
+  // A4 portrait, minus the page margins set below (900 dxa left/right) = usable width.
+  const PAGE_WIDTH_DXA = 11906;
+  const CONTENT_WIDTH_DXA = PAGE_WIDTH_DXA - 900 - 900; // 10106
+
+  // Converts a row of percentages (must sum to 100) into DXA widths that sum
+  // exactly to CONTENT_WIDTH_DXA. We use fixed DXA widths everywhere instead
+  // of WidthType.PERCENTAGE — percentage widths are a documented compatibility
+  // problem in docx.js: they render fine in Word but break table layout in
+  // Google Docs and Apple Pages (github.com/dolanmiu/docx/issues/1457).
+  function pctRowToDxa(pcts){
+    const raw = pcts.map(p => Math.round(p / 100 * CONTENT_WIDTH_DXA));
+    const diff = CONTENT_WIDTH_DXA - raw.reduce((a,b) => a+b, 0);
+    raw[raw.length - 1] += diff; // absorb rounding error in the last column
+    return raw;
+  }
+
+  const LABEL_VALUE_WIDTHS = pctRowToDxa([28, 72]);
+
+  // Populated inside generateDocx(), once we've confirmed the CDN script
+  // loaded. Declared here (not with const/destructure at top-level) so the
+  // helper functions below can close over them without needing docx to
+  // exist at page-load time.
+  let Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      WidthType, AlignmentType, BorderStyle, ImageRun, PageBreak,
+      VerticalAlign, ShadingType;
+
+  function fmtDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function cell(text, opts){
+    opts = opts || {};
+    // opts.width is a DXA value (twentieths of a point), not a percentage —
+    // see the pctRowToDxa() note above for why.
+    return new TableCell({
+      width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
+      shading: opts.shade ? { fill: 'EEF3F7', type: ShadingType.CLEAR, color: 'auto' } : undefined,
+      verticalAlign: VerticalAlign.CENTER,
+      margins: { top: 60, bottom: 60, left: 80, right: 80 },
+      children: [ new Paragraph({
+        alignment: opts.align || AlignmentType.LEFT,
+        children: [ new TextRun({ text: text || '', bold: !!opts.bold, size: opts.size || 18, font: 'Calibri' }) ]
+      }) ]
+    });
+  }
+
+  function labelValueRow(label, value){
+    return new TableRow({ children: [
+      cell(label, { width: LABEL_VALUE_WIDTHS[0], bold: true, shade: true, size: 18 }),
+      cell(value, { width: LABEL_VALUE_WIDTHS[1], size: 18 })
+    ]});
+  }
+
+  // Re-encodes any browser-decodable image (jpg/png/gif/webp/heic-on-Safari/…)
+  // to a JPEG via <canvas>. This fixes three things at once:
+  //   1. docx.js's ImageRun *requires* a `type` field, restricted to
+  //      png/jpg/gif/bmp/svg — WebP and HEIC aren't in that list, so passing
+  //      the original file bytes straight through would either throw or
+  //      silently embed an unreadable image. Re-encoding sidesteps that.
+  //   2. It downsizes large photos (a 12MP phone photo) to the resolution
+  //      the document will actually display, instead of embedding the full
+  //      multi-MB original and only scaling it visually — this is the
+  //      difference between a ~200KB and a ~5MB image inside the .docx.
+  //   3. It gives us pixel dimensions "for free" from the same decode step.
+  function normalizeImageToJpeg(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; // JPEG has no transparency; avoid black-fill artifacts
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(async (blob) => {
+          URL.revokeObjectURL(url);
+          if(!blob){ reject(new Error('Could not process image: ' + file.name)); return; }
+          resolve({ data: await blob.arrayBuffer(), width: w, height: h });
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Unreadable image: ' + file.name)); };
+      img.src = url;
+    });
+  }
+
+  function isLikelyImage(file){
+    return file.type.startsWith('image/') ||
+      (!file.type && /\.(jpe?g|png|gif|bmp|webp|heic|heif)$/i.test(file.name));
+  }
+
+  function scaleToFit(w, h, maxW, maxH){
+    const ratio = Math.min(maxW / w, maxH / h, 1);
+    return { width: Math.round(w * ratio), height: Math.round(h * ratio) };
+  }
+
+  // Single image, not a full attachment page — just fitted into a small
+  // signature-sized box and re-encoded via the same normalizeImageToJpeg()
+  // used above. If nothing was uploaded, we still leave a blank line so the
+  // printed voucher has somewhere to sign by hand.
+  async function buildSignatureBlock(entry){
+    const label = new Paragraph({
+      spacing: { before: 240, after: 100 },
+      children: [ new TextRun({ text: 'Student Signature', bold: true, size: 18, font: 'Calibri', color: '4A5A76' }) ]
+    });
+
+    if(!entry){
+      return [ label, new Paragraph({
+        spacing: { after: 80 },
+        children: [ new TextRun({ text: '_______________________________          Date: ____________', size: 18, font: 'Calibri' }) ]
+      }) ];
+    }
+
+    try {
+      const img = await normalizeImageToJpeg(entry.file, 400, 0.9);
+      const fit = scaleToFit(img.width, img.height, 220, 100);
+      return [ label, new Paragraph({
+        spacing: { after: 80 },
+        children: [ new ImageRun({ type: 'jpg', data: img.data, transformation: { width: fit.width, height: fit.height } }) ]
+      }) ];
+    } catch(err){
+      return [ label, new Paragraph({
+        spacing: { after: 80 },
+        children: [ new TextRun({ text: `Signature image could not be embedded (${err.message}). _______________________________          Date: ____________`, size: 18, font: 'Calibri', color: 'C23B3B' }) ]
+      }) ];
+    }
+  }
+
+  async function buildAttachmentSection(title, entries){
+    const children = [];
+    if(entries.length === 0) return children;
+
+    children.push(new Paragraph({ children: [ new PageBreak() ] }));
+    children.push(new Paragraph({
+      spacing: { after: 200 },
+      children: [ new TextRun({ text: title, bold: true, size: 26, font: 'Calibri', color: '00629B' }) ]
+    }));
+
+    for(let i = 0; i < entries.length; i++){
+      const file = entries[i].file;
+      const label = `${entries.length > 1 ? (i+1) + '. ' : ''}${file.name}`;
+      if(isLikelyImage(file)){
+        try {
+          const img = await normalizeImageToJpeg(file, 1400, 0.82);
+          const fit = scaleToFit(img.width, img.height, 560, 680);
+          children.push(new Paragraph({
+            spacing: { before: 120, after: 80 },
+            children: [ new TextRun({ text: label, italics: true, size: 18, font: 'Calibri', color: '4A5A76' }) ]
+          }));
+          children.push(new Paragraph({
+            children: [ new ImageRun({ type: 'jpg', data: img.data, transformation: { width: fit.width, height: fit.height } }) ]
+          }));
+        } catch(err){
+          children.push(new Paragraph({
+            spacing: { before: 120, after: 80 },
+            children: [ new TextRun({ text: `${label} — could not be embedded (${err.message}). Please attach it separately.`, italics: true, size: 18, font: 'Calibri', color: 'C23B3B' }) ]
+          }));
+        }
+      } else {
+        children.push(new Paragraph({
+          spacing: { before: 120, after: 80 },
+          children: [ new TextRun({ text: `${label} (attached file — open separately, not a previewable image)`, italics: true, size: 18, font: 'Calibri' }) ]
+        }));
+      }
+    }
+    return children;
+  }
+
+  async function generateDocx(){
+    // The docx library is loaded from a CDN. If that request was blocked
+    // (common on some campus/office networks) `docx` never gets defined —
+    // catch that here with a clear message instead of a cryptic JS error.
+    if(typeof docx === 'undefined'){
+      alert('The document engine failed to load, likely because this network is blocking the CDN it comes from (cdn.jsdelivr.net). Try a different network, disable any content blocker, or ask your network admin to allow that domain.');
+      return;
+    }
+    ({ Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+       WidthType, AlignmentType, BorderStyle, ImageRun, PageBreak,
+       VerticalAlign, ShadingType } = docx);
+
+    const eventName = document.getElementById('eventName').value.trim();
+    const purpose = document.getElementById('purpose').value.trim();
+    const eventDate = document.getElementById('eventDate').value;
+    const studentName = document.getElementById('studentName').value.trim();
+    const rollNo = document.getElementById('rollNo').value.trim();
+    const nirmaEmail = document.getElementById('nirmaEmail').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const upi = document.getElementById('upi').value.trim();
+
+    const rows = [...tbody.querySelectorAll('tr')].map((tr, i) => ({
+      sr: i + 1,
+      biller: tr.querySelector('.f-biller').value.trim(),
+      billDate: tr.querySelector('.f-billdate').value,
+      gst: tr.querySelector('.f-gst').value.trim(),
+      items: tr.querySelector('.f-items').value.trim(),
+      amount: parseFloat(tr.querySelector('.f-amount').value) || 0,
+      paidVia: tr.querySelector('.f-paidvia').value
+    }));
+
+    // Matches every field marked with a required-asterisk in the form —
+    // previously only 3 of the 8 marked fields were actually checked.
+    const requiredFields = [
+      ['eventName', 'Event Name', eventName], ['purpose', 'Purpose', purpose],
+      ['eventDate', 'Date', eventDate], ['studentName', 'Name of Student', studentName],
+      ['rollNo', 'Roll No.', rollNo], ['nirmaEmail', 'Nirma Email', nirmaEmail],
+      ['phone', 'Phone Number', phone], ['upi', 'UPI ID / Account No.', upi],
+    ];
+    const missing = requiredFields.filter(([, , v]) => !v).map(([, label]) => label);
+    if(missing.length){
+      alert('Please fill in the following before generating:\n\n' + missing.join('\n'));
+      return;
+    }
+
+    document.getElementById('statusMsg').textContent = 'Building document…';
+    document.getElementById('generateBtn').disabled = true;
+
+    const total = rows.reduce((a,r) => a + r.amount, 0);
+    const eventPurposeWidths = pctRowToDxa([16, 34, 14, 36]);
+    const particularsWidths = pctRowToDxa([6, 18, 11, 13, 26, 13, 13]);
+
+    const headChildren = [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [ new TextRun({ text: 'IEEE Student Branch – Nirma University', bold: true, size: 34, font: 'Calibri' }) ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200, before: 60 },
+        children: [ new TextRun({ text: 'EXPENSE REIMBURSEMENT VOUCHER', bold: true, size: 30, font: 'Calibri' }) ]
+      }),
+      new Table({
+        width: { size: CONTENT_WIDTH_DXA, type: WidthType.DXA },
+        columnWidths: eventPurposeWidths,
+        borders: { top:{style:BorderStyle.NONE}, bottom:{style:BorderStyle.NONE}, left:{style:BorderStyle.NONE}, right:{style:BorderStyle.NONE}, insideHorizontal:{style:BorderStyle.NONE}, insideVertical:{style:BorderStyle.NONE} },
+        rows: [
+          new TableRow({ children: [
+            cell('Event Name', { width: eventPurposeWidths[0], bold: true, size: 18 }),
+            cell(eventName, { width: eventPurposeWidths[1], size: 18 }),
+            cell('Purpose', { width: eventPurposeWidths[2], bold: true, size: 18 }),
+            cell(purpose, { width: eventPurposeWidths[3], size: 18 }),
+          ]}),
+          new TableRow({ children: [
+            cell('Date', { width: eventPurposeWidths[0], bold: true, size: 18 }),
+            cell(fmtDate(eventDate), { width: eventPurposeWidths[1], size: 18 }),
+            cell('', { width: eventPurposeWidths[2], size: 18 }),
+            cell('', { width: eventPurposeWidths[3], size: 18 }),
+          ]}),
+        ]
+      }),
+      new Paragraph({ text: '', spacing: { after: 160 } }),
+      new Paragraph({
+        spacing: { after: 100 },
+        children: [ new TextRun({ text: 'Particulars', bold: true, size: 24, font: 'Calibri' }) ]
+      }),
+    ];
+
+    const [w0, w1, w2, w3, w4, w5, w6] = particularsWidths;
+    const tableHeader = new TableRow({
+      tableHeader: true,
+      children: [
+        cell('Sr. No.', { width: w0, bold: true, shade: true, align: AlignmentType.CENTER, size: 17 }),
+        cell("Biller's Name", { width: w1, bold: true, shade: true, size: 17 }),
+        cell('Bill Date', { width: w2, bold: true, shade: true, size: 17 }),
+        cell('GST No. (if any)', { width: w3, bold: true, shade: true, size: 17 }),
+        cell('Items / Services', { width: w4, bold: true, shade: true, size: 17 }),
+        cell('Amount (Rs.)', { width: w5, bold: true, shade: true, align: AlignmentType.RIGHT, size: 17 }),
+        cell('Paid in Cash / Online', { width: w6, bold: true, shade: true, align: AlignmentType.CENTER, size: 17 }),
+      ]
+    });
+
+    const dataRows = rows.map(r => new TableRow({ children: [
+      cell(String(r.sr), { width: w0, align: AlignmentType.CENTER, size: 17 }),
+      cell(r.biller, { width: w1, size: 17 }),
+      cell(fmtDate(r.billDate), { width: w2, size: 17 }),
+      cell(r.gst, { width: w3, size: 17 }),
+      cell(r.items, { width: w4, size: 17 }),
+      cell(r.amount ? r.amount.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}) : '', { width: w5, align: AlignmentType.RIGHT, size: 17 }),
+      cell(r.paidVia, { width: w6, align: AlignmentType.CENTER, size: 17 }),
+    ]}));
+
+    const totalRow = new TableRow({ children: [
+      cell('', { width: w0 }),
+      cell('', { width: w1 }),
+      cell('', { width: w2 }),
+      cell('', { width: w3 }),
+      cell('Total Amount', { width: w4, bold: true, align: AlignmentType.RIGHT, size: 18, shade: true }),
+      cell(total.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}), { width: w5, bold: true, align: AlignmentType.RIGHT, size: 18, shade: true }),
+      cell('', { width: w6, shade: true }),
+    ]});
+
+    const particularsTable = new Table({
+      width: { size: CONTENT_WIDTH_DXA, type: WidthType.DXA },
+      columnWidths: particularsWidths,
+      rows: [tableHeader, ...dataRows, totalRow],
+    });
+
+    const studentTable = new Table({
+      width: { size: CONTENT_WIDTH_DXA, type: WidthType.DXA },
+      columnWidths: LABEL_VALUE_WIDTHS,
+      rows: [
+        labelValueRow('Name of Student', studentName),
+        labelValueRow('Roll No.', rollNo),
+        labelValueRow('Nirma Email', nirmaEmail),
+        labelValueRow('Phone Number', phone),
+        labelValueRow('UPI ID / Acc No.', upi),
+      ]
+    });
+
+    const bodyChildren = [
+      ...headChildren,
+      particularsTable,
+      new Paragraph({ text: '', spacing: { after: 260 } }),
+      studentTable,
+      ...(await buildSignatureBlock(attachments.signature[0])),
+    ];
+
+    const billsSection = await buildAttachmentSection('Bill(s) of Purchase', attachments.bills);
+    const paymentSection = await buildAttachmentSection('Payment Screenshot — Individual to Vendor', attachments.payment);
+    const reimbSection = await buildAttachmentSection('Reimbursement Screenshot — Branch to Individual', attachments.reimb);
+
+    const doc = new Document({
+      sections: [{
+        properties: { page: {
+          size: { width: PAGE_WIDTH_DXA, height: 16838 }, // explicit A4 — column widths above assume this
+          margin: { top: 720, bottom: 720, left: 900, right: 900 }
+        } },
+        children: [ ...bodyChildren, ...billsSection, ...paymentSection, ...reimbSection ]
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeEvent = (eventName || 'Voucher').replace(/[^a-z0-9]+/gi, '_');
+    const safeStudent = (studentName || '').replace(/[^a-z0-9]+/gi, '_');
+    a.href = url;
+    a.download = `Reimbursement_Voucher_${safeEvent}${safeStudent ? '_' + safeStudent : ''}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    document.getElementById('statusMsg').textContent = 'Voucher generated and downloaded ✓';
+    document.getElementById('generateBtn').disabled = false;
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    generateDocx().catch(err => {
+      console.error(err);
+      alert('Something went wrong generating the document: ' + err.message);
+      document.getElementById('generateBtn').disabled = false;
+    });
+  });
+
+  updateTotal();
+})();
+</script>
+</body>
+</html>
